@@ -1,0 +1,41 @@
+name: Deploy Multi-container App
+on:
+  push:
+    branches:
+      - master
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to Docker
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build the client image to run the tests
+        run: docker build -t cugureanu/client-test -f ./client/Dockerfile.dev ./client
+      - name: Run the client image with the test command
+        run: docker run cugureanu/client-test npm run test
+
+      - name: Build the prod. client image
+        run: docker build -t cugureanu/multi-client ./client
+      - name: Build the prod. nginx image
+        run: docker build -t cugureanu/multi-nginx ./nginx
+      - name: Build the prod. server image
+        run: docker build -t cugureanu/multi-server ./server
+      - name: Build the prod. worker image
+        run: docker build -t cugureanu/multi-worker ./worker
+ 
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+ 
+      - name: Deploy to ElasticBeanstalk
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: frontend
+          environment_name: Frontend-env
+          existing_bucket_name: elasticbeanstalk-eu-central-1-339713009960
+          region: eu-central-1
+          version_label: ${{ github.sha }}
+          deployment_package: deploy.zip
