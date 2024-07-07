@@ -17,6 +17,7 @@ function App() {
         </a>
       </div>
       <nav>
+        <h2>Fib Calculator</h2>
         <Link to="/">Home</Link> <br />
         <Link to="/otherpage">Other Page</Link>
       </nav>
