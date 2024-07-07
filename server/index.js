@@ -9,6 +9,9 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+console.log(`server keys:`);
+console.log(keys);
+
 // Postgres Client
 const { Pool } = require("pg");
 const pgClient = new Pool({

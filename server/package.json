@@ -8,7 +8,7 @@
     "nodemon": "1.18.3"
   },
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon"
+    "start": "NODE_ENV=production node index.js",
+    "dev": "NODE_ENV=development nodemon"
   }
 }
