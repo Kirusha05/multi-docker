@@ -17,13 +17,17 @@ const pgClient = new Pool({
   database: keys.pgDatabase,
   password: keys.pgPassword,
   port: keys.pgPort,
+  ssl:
+    process.env.NODE_ENV !== "production"
+      ? false
+      : { rejectUnauthorized: false },
 });
 
-pgClient.on("error", () => console.log("Lost PG connection"));
-
-pgClient
-  .query("CREATE TABLE IF NOT EXISTS values (number INT)")
-  .catch((err) => console.log(err));
+pgClient.on("connect", (client) => {
+  client
+    .query("CREATE TABLE IF NOT EXISTS values (number INT)")
+    .catch((err) => console.error(err));
+});
 
 // Redis Client
 const redis = require("redis");
@@ -41,15 +45,15 @@ app.get("/", (req, res) => {
 
 app.get("/values/all", async (req, res) => {
   const values = await pgClient.query("SELECT * FROM values");
-  console.log('POSTGRES /values/all');
+  console.log("POSTGRES /values/all");
   console.log(values.rows);
   res.send(values.rows);
 });
 
 app.get("/values/current", async (req, res) => {
   redisClient.hgetall("values", (err, values) => {
-    console.log(`REDIS /values/current:`)
-    console.log(values)
+    console.log(`REDIS /values/current:`);
+    console.log(values);
     res.send({ values: values || {} });
   });
 });
@@ -69,5 +73,5 @@ app.post("/values", async (req, res) => {
 });
 
 app.listen(5000, () => {
-  console.log('Listening on port 5000...')
-})
+  console.log("Listening on port 5000...");
+});
